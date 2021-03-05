@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using UnityEngine.AI;
 
 
 namespace Character
@@ -15,8 +15,10 @@ namespace Character
         
         
         float CurrentSpeed;
+        [SerializeField] private LayerMask JumpLayerMask;
 
-
+        [SerializeField] private float JumpThreshold = 0.1f;
+        [SerializeField] private float JumpLandingDelay = 0.0f;
 
         PlayerController PController;
         Animator PlayerAnimator;
@@ -25,7 +27,7 @@ namespace Character
         Vector2 InputVector;
         Vector3 MoveDirection;
 
-
+        private NavMeshAgent PlayerNavMeshAgent;
 
 
         // animator hashes
@@ -44,6 +46,7 @@ namespace Character
             PController = GetComponent<PlayerController>();
             PlayerAnimator = GetComponent<Animator>();
             rbRef = GetComponent<Rigidbody>();
+            PlayerNavMeshAgent = GetComponent<NavMeshAgent>();
 
             // WalkSpeed = 3.0f;
             // RunSpeed = 5.0f;
@@ -58,8 +61,12 @@ namespace Character
         {
             // if is jumping dont move
             if(PController.IsJumping) return;
+
             // if no input dont move
             if(InputVector.magnitude <= 0) return;
+
+            // if no input set move direction to zero
+            if (!(InputVector.magnitude > 0)) MoveDirection = Vector3.zero;
 
 
             // determine walking or running 
@@ -81,8 +88,13 @@ namespace Character
             Vector3 movement = MoveDirection * (CurrentSpeed * Time.deltaTime);
 
             // apply movement
-            transform.position += movement;
-            
+            // transform.position += movement;
+
+            // apply movement with navmesh
+            PlayerNavMeshAgent.Move(movement);
+
+
+
         }
 
 
@@ -150,19 +162,45 @@ namespace Character
 
         public void OnJump(InputValue input)
         {
+            if (PController.IsJumping) return;
+
             print(input.Get());
 
+            PlayerNavMeshAgent.isStopped = true;
+            PlayerNavMeshAgent.enabled = false;
 
             PController.IsJumping = input.isPressed;
             PlayerAnimator.SetBool(JumpHash, input.isPressed);
 
+            // add force to rigidbody
             rbRef.AddForce((transform.up + MoveDirection) * JumpForce, ForceMode.Impulse);
-            
+
+            // Check if landed
+            InvokeRepeating(nameof(LandingCheck), JumpLandingDelay, 0.1f);
         }
 
 
 
 
+        private void LandingCheck()
+        {
+            print("Checked");
+            if (Physics.Raycast(transform.position, -transform.up, out RaycastHit hit, 100f, JumpLayerMask))
+            {
+                if (!(hit.distance < JumpThreshold) || !PController.IsJumping) return;
+                print("stopped");
+
+                PlayerNavMeshAgent.enabled = true;
+                PlayerNavMeshAgent.isStopped = false;
+
+                PController.IsJumping = false;
+                PlayerAnimator.SetBool(JumpHash, false);
+
+                CancelInvoke(nameof(LandingCheck));
+            
+
+            }
+        }
 
 
     }
