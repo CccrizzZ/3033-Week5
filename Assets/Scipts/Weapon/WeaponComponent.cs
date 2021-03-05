@@ -45,11 +45,17 @@ namespace Weapons
         public WeaponStats WeaponInformation => WeaponStats;
   
         [SerializeField] protected WeaponStats WeaponStats;
-
+        
+        [Header("Particles")]
+        [SerializeField] protected GameObject FiringAnimation;
+        [SerializeField] protected Transform ParticleSpawnLocation;
+        
         protected Camera MainCamera;
         protected WeaponHolder WeaponHolder;
         protected CrosshairScript CrosshairComponent;
-  
+        
+        protected ParticleSystem FiringEffect;
+
         public bool Firing { get; private set; }
         public bool Reloading { get; private set; }
 
@@ -76,6 +82,7 @@ namespace Weapons
             {
                 // repeat firing according to weapon data
                 InvokeRepeating(nameof(FireWeapon), WeaponStats.FireStartDelay, WeaponStats.FireRate);
+            
             }
             else
             {
@@ -89,6 +96,10 @@ namespace Weapons
         public virtual void StopFiringWeapon()
         {
             Firing = false;
+            if (FiringEffect)
+            {
+                Destroy(FiringEffect.gameObject);
+            }
             CancelInvoke(nameof(FireWeapon));
         }
 
@@ -112,6 +123,10 @@ namespace Weapons
         protected virtual void ReloadWeapon()
         {
             // determine how many bullet to load
+            if (FiringEffect)
+            {
+                Destroy(FiringEffect.gameObject);
+            }
             int bulletsToReload = WeaponStats.ClipSize - WeaponStats.BulletsAvailable;
             
             if (bulletsToReload < 0)

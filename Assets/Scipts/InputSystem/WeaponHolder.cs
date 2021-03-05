@@ -83,6 +83,9 @@ namespace Character
 
             // initialize weapon
             EquippedWeapon.Initialize(this, PCrosshair);
+            
+
+            PlayerEvent.Invoke_OnWeaponEquipped(EquippedWeapon);
 
             // set grip inverse kinematic location
             GripIKLocation = EquippedWeapon.GripLocation;
@@ -90,7 +93,7 @@ namespace Character
             // set weapon type for animator
             PAnimator.SetInteger(WeaponTypeHash, (int)EquippedWeapon.WeaponInformation.WeaponType);
 
-            UpdateAmmoIndicator();
+            // UpdateAmmoIndicator();
 
             // if (spawnedweapon)
             // {
@@ -108,12 +111,12 @@ namespace Character
             // print(EquippedWeapon.WeaponInformation.BulletsAvailable);
         }
 
-        public void UpdateAmmoIndicator()
-        {
-            AmmoIndicator.transform.Find("BulletInClip").GetComponent<Text>().text = EquippedWeapon.WeaponInformation.BulletsInClip.ToString();
-            AmmoIndicator.transform.Find("BulletInPouch").GetComponent<Text>().text = EquippedWeapon.WeaponInformation.BulletsAvailable.ToString();
+        // public void UpdateAmmoIndicator()
+        // {
+        //     AmmoIndicator.transform.Find("BulletInClip").GetComponent<Text>().text = EquippedWeapon.WeaponInformation.BulletsInClip.ToString();
+        //     AmmoIndicator.transform.Find("BulletInPouch").GetComponent<Text>().text = EquippedWeapon.WeaponInformation.BulletsAvailable.ToString();
 
-        }
+        // }
 
 
 
@@ -144,10 +147,10 @@ namespace Character
                 StopFiring();
             }
 
-            if (!PController.IsReloading)
-            {
-                UpdateAmmoIndicator();
-            }
+            // if (!PController.IsReloading)
+            // {
+            //     UpdateAmmoIndicator();
+            // }
         }
 
         private void StartFiring()
@@ -208,7 +211,7 @@ namespace Character
             // if is reloading, dont stop
             if (PAnimator.GetBool(ReloadingHash)) return;
             
-            UpdateAmmoIndicator();
+            // UpdateAmmoIndicator();
             
             PController.IsReloading = false;
             EquippedWeapon.StopReloading();
